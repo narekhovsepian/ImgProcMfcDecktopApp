@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMFC_1", "TestMFC_1\TestMFC_1.vcxproj", "{70B412C9-7915-4241-902D-45B10C28E507}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70B412C9-7915-4241-902D-45B10C28E507}.Debug|x64.ActiveCfg = Debug|x64
+		{70B412C9-7915-4241-902D-45B10C28E507}.Debug|x64.Build.0 = Debug|x64
+		{70B412C9-7915-4241-902D-45B10C28E507}.Release|x64.ActiveCfg = Release|x64
+		{70B412C9-7915-4241-902D-45B10C28E507}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85F0DC0A-CF6E-4F46-96A4-32EF6EA65C61}
+	EndGlobalSection
+EndGlobal
