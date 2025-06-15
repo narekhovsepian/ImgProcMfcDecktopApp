@@ -1017,7 +1017,7 @@ void CTestMFC1Dlg::OnCbnSelchangeCombo3changefilters()
 
 		break;
 	case filter::FilterNames::_RecursiveGaussianBlurVliet:
-		_genericSlider0.SetRange(0, 100,true);
+		_genericSlider0.SetRange(0, 100, true);
 		_genericSlider0.SetPos(0);
 		_genericSlider0.SetMiddle(50);
 		_genericSlider0.ShowWindowXCslider(SW_NORMAL);
@@ -1026,7 +1026,7 @@ void CTestMFC1Dlg::OnCbnSelchangeCombo3changefilters()
 
 		break;
 	case filter::FilterNames::_GaussianBlurSeperableConvolutionOpencvKernel:
-		_genericSlider0.SetRange(0, 100,true);
+		_genericSlider0.SetRange(0, 100, true);
 		_genericSlider0.SetPos(0);
 		_genericSlider0.SetMiddle(50);
 		_genericSlider0.ShowWindowXCslider(SW_NORMAL);
@@ -1117,7 +1117,7 @@ void CTestMFC1Dlg::OnCbnSelchangeCombo3changefilters()
 		_genericSlider2.ShowWindowXCslider(SW_NORMAL);
 		break;
 	case filter::FilterNames::_SobelEdgeDetection:
-		_genericSlider0.SetRange(0, 7,true);
+		_genericSlider0.SetRange(0, 7, true);
 		_genericSlider0.SetPos(3);
 		_genericSlider0.SetMiddle(3);
 		_genericSlider0.SetName(L"");
@@ -1180,7 +1180,8 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 		switch ((filter::FilterNames)iCurrFilter)
 		{
 		case filter::FilterNames::_Grayscale:
-			filter::xFilters::Grayscale(inData, outData);
+			//filter::xFilters::Grayscale(inData, outData);
+			filter::xFilters::GrayscaleMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_BlackAndWhite:
 		{
@@ -1191,7 +1192,9 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_BlackAndWhite, slider, 0, 255/*min no max = 255*/);
-			filter::xFilters::BlackAndWhite(inData, outData, x);
+			//filter::xFilters::BlackAndWhite(inData, outData, x);
+
+			filter::xFilters::BlackAndWhiteMultiThread(inData, outData, x);
 			break;
 		}
 		case filter::FilterNames::_OnlyRed:

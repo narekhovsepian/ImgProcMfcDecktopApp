@@ -7,6 +7,8 @@
 #include <numbers>
 #include "xImage.h"
 #include "utility.h"
+#include <thread>
+#include <mutex>
 
 class xImage;
 
@@ -154,7 +156,15 @@ namespace filter {
 	public:
 
 		static bool Grayscale(xImage* pInImage, xImage* pOutImage);
+		///
+		static bool GrayscaleMultiThread(xImage* pInImage, xImage* pOutImage);
+		inline static void helpFunctionGrayscaleMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+		///
 		static bool BlackAndWhite(xImage* pInImage, xImage* pOutImage, float fThreshold = 128);
+		static bool BlackAndWhiteMultiThread(xImage* pInImage, xImage* pOutImage, float fThreshold = 128);
+		inline static void helpFunctionBlackAndWhiteMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight, float fThreshold);
+		//
+
 		static bool OnlyRed(xImage* pInImage, xImage* pOutImage);
 		static bool OnlyGreen(xImage* pInImage, xImage* pOutImage);
 		static bool OnlyBlue(xImage* pInImage, xImage* pOutImage);

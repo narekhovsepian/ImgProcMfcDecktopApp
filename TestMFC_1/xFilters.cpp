@@ -48,6 +48,83 @@ bool filter::xFilters::Grayscale(xImage* pInImage, xImage* pOutImage) {
 	return false;
 }
 
+
+void filter::xFilters::helpFunctionGrayscaleMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight) {
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		auto currRowIn = (uint8_t*)(pInData + (y * rowBytes));
+		auto currRowOut = (uint8_t*)(pOutData + (y * rowBytes));
+		for (int x{}, i{}; x < Width; ++x, i += 3) {
+			currRowOut[i] = (currRowIn[i] + currRowIn[i + 1] + currRowIn[i + 2]) / 3;
+			currRowOut[i + 1] = currRowOut[i];
+			currRowOut[i + 2] = currRowOut[i];
+		}
+
+	}
+}
+
+bool filter::xFilters::GrayscaleMultiThread(xImage* pInImage, xImage* pOutImage) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		std::mutex mt;
+		const int imageH = pInImage->GetHeight();
+		const int imageW = pInImage->GetWidth();
+
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pInImageData = pInImage->GetData();
+		auto pOutImageData = pOutImage->GetData();
+
+		/*auto tFun = [&](uint8_t* pInData, uint8_t* pOutData, const int lowHeight, const int highHeight) {
+
+			std::lock_guard<std::mutex>{mt};
+			for (int y{ lowHeight }; y < highHeight; ++y) {
+
+				auto currRowIn = (uint8_t*)(pInData + (y * rowBytes));
+				auto currRowOut = (uint8_t*)(pOutData + (y * rowBytes));
+				for (int x{}, i{}; x < imageW; ++x, i += 3) {
+					currRowOut[i] = (currRowIn[i] + currRowIn[i + 1] + currRowIn[i + 2]) / 3;
+					currRowOut[i + 1] = currRowOut[i];
+					currRowOut[i + 2] = currRowOut[i];
+				}
+
+			}
+			};*/
+
+		std::vector<std::thread> th;
+
+		int n = std::thread::hardware_concurrency();
+
+		int H = imageH / n;
+
+		int mn = imageH % n;
+
+
+		int low{};
+		int high{ H };
+
+		for (int i{}; i < n; ++i) {
+			if (i != 0) {
+				low += H;
+				high += (i == (n - 1) ? (mn + H) : H);
+			}
+			th.emplace_back(filter::xFilters::helpFunctionGrayscaleMultiThread, pInImageData, pOutImageData, rowBytes, imageW, low, high);
+		}
+
+		for (int i{}; i < n; ++i) {
+			th[i].join();
+		}
+
+
+		return true;
+	}
+
+	return false;
+}
+
+
+
 bool filter::xFilters::BlackAndWhite(xImage* pInImage, xImage* pOutImage, float fThreshold/*=128*/) {
 
 	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
@@ -90,6 +167,71 @@ bool filter::xFilters::BlackAndWhite(xImage* pInImage, xImage* pOutImage, float 
 				outIndex += 3;
 			}
 		}
+		return true;
+	}
+	return false;
+}
+
+
+void filter::xFilters::helpFunctionBlackAndWhiteMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight, float fThreshold) {
+
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		auto currRowIn = (uint8_t*)(pInData + (y * rowBytes));
+		auto currRowOut = (uint8_t*)(pOutData + (y * rowBytes));
+		for (int x{}, i{}; x < Width; ++x, i += 3) {
+
+			int gray = (currRowIn[i] + currRowIn[i + 1] + currRowIn[i + 2]) / 3;
+
+			if (gray < fThreshold)
+				gray = 0;
+			else
+				gray = 0xff;
+
+			currRowOut[i] = gray;
+			currRowOut[i + 1] = currRowOut[i];
+			currRowOut[i + 2] = currRowOut[i];
+		}
+
+	}
+}
+
+bool filter::xFilters::BlackAndWhiteMultiThread(xImage* pInImage, xImage* pOutImage, float fThreshold) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const auto imageH = pInImage->GetHeight();
+		const auto imageW = pInImage->GetWidth();
+		const auto rowBytes = pInImage->GetRowBytes();
+
+		auto inData = pInImage->GetData();
+		auto outData = pOutImage->GetData();
+
+		int n = std::thread::hardware_concurrency();
+
+		int H = imageH / n;
+		int mn = imageH % n;
+
+		int low{};
+		int high{ H };
+
+
+		std::vector<std::thread> th;
+
+		for (int i{}; i < n; ++i) {
+			if (i != 0) {
+				low += H;
+				high += (i == n - 1 ? H + mn : H);
+			}
+
+			th.emplace_back(helpFunctionBlackAndWhiteMultiThread, inData, outData, rowBytes, imageW, low, high, fThreshold);
+		}
+
+		for (int i{}; i < n; ++i) {
+			th[i].join();
+		}
+
+
 		return true;
 	}
 	return false;
