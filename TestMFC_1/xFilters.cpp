@@ -753,7 +753,7 @@ void filter::xFilters::helpFunctionNegativeMultiThread(uint8_t* pInData, uint8_t
 			pOutDataCurrRow[index + 1] = 255 - pInDataCurrRow[index + 2];
 			pOutDataCurrRow[index + 2] = 255 - pInDataCurrRow[index + 2];
 
-
+			          
 		}
 	}
 }
