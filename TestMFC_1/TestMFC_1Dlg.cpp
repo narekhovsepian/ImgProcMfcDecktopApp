@@ -1198,19 +1198,24 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 			break;
 		}
 		case filter::FilterNames::_OnlyRed:
-			filter::xFilters::OnlyRed(inData, outData);
+			//filter::xFilters::OnlyRed(inData, outData);
+			filter::xFilters::OnlyRedMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_OnlyGreen:
-			filter::xFilters::OnlyGreen(inData, outData);
+			//filter::xFilters::OnlyGreen(inData, outData);
+			filter::xFilters::OnlyGreenMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_OnlyBlue:
-			filter::xFilters::OnlyBlue(inData, outData);
+			//filter::xFilters::OnlyBlue(inData, outData);
+			filter::xFilters::OnlyBlueMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_GraycaleNegative:
-			filter::xFilters::GraycaleNegative(inData, outData);
+			//filter::xFilters::GraycaleNegative(inData, outData);
+			filter::xFilters::GraycaleNegativeMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_Negative:
-			filter::xFilters::Negative(inData, outData);
+			//filter::xFilters::Negative(inData, outData);
+			filter::xFilters::NegativeMultiThread(inData, outData);
 			break;
 		case filter::FilterNames::_B_W_Negative:
 		{	// min = 0 max = 255 positive number
@@ -1220,7 +1225,8 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_B_W_Negative, slider, 0, 255 /*min no max = 255*/);
-			filter::xFilters::BlackAndWhiteNegative(inData, outData, x);
+			//filter::xFilters::BlackAndWhiteNegative(inData, outData, x);
+			filter::xFilters::BlackAndWhiteNegativeMultiThread(inData, outData, x);
 			break;
 		}
 		case filter::FilterNames::_Contrast:

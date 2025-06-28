@@ -158,19 +158,52 @@ namespace filter {
 		static bool Grayscale(xImage* pInImage, xImage* pOutImage);
 		///
 		static bool GrayscaleMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
 		inline static void helpFunctionGrayscaleMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
 		///
+	public:
 		static bool BlackAndWhite(xImage* pInImage, xImage* pOutImage, float fThreshold = 128);
 		static bool BlackAndWhiteMultiThread(xImage* pInImage, xImage* pOutImage, float fThreshold = 128);
+	private:
 		inline static void helpFunctionBlackAndWhiteMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight, float fThreshold);
 		//
-
+	public:
 		static bool OnlyRed(xImage* pInImage, xImage* pOutImage);
+		static bool OnlyRedMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
+		inline static void helpFunctionOnlyRedMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+		//
+	public:
 		static bool OnlyGreen(xImage* pInImage, xImage* pOutImage);
+		static bool OnlyGreenMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
+		inline static void helpFunctionOnlyGreenMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool OnlyBlue(xImage* pInImage, xImage* pOutImage);
+		static bool OnlyBlueMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
+		inline static void helpFunctionOnlyBlueMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool GraycaleNegative(xImage* pInImage, xImage* pOutImage);
+		static bool GraycaleNegativeMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
+		inline static void helpFunctionGraycaleNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
+		static bool BlackAndWhiteNegative(xImage* pInImage, xImage* pOutImage, const float fThreshold = 128);
+		static bool BlackAndWhiteNegativeMultiThread(xImage* pInImage, xImage* pOutImage, const float fThreshold = 128);
+	private:
+		inline static void helpFunctionBlackAndWhiteNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight, const float fThreshold = 128);
+	public:
+		//
 		static bool Negative(xImage* pInImage, xImage* pOutImage);
-		static bool BlackAndWhiteNegative(xImage* pInImage, xImage* pOutImage, float fThreshold = 128);
+		static bool NegativeMultiThread(xImage* pInImage, xImage* pOutImage);
+	private:
+		inline static void helpFunctionNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool Contrast(xImage* pInImage, xImage* pOutImage, float iContrast);
 		static bool Brightness(xImage* pInImage, xImage* pOutImage, int ibrightness);
 		static bool Gamma(xImage* pInImage, xImage* pOutImage, float fGamma);
@@ -228,9 +261,9 @@ namespace filter {
 
 		///////// Edge Detection /////////////////////////
 		static void getSobelKernels(std::vector<int>& _kx, std::vector<int>& _ky, int dx, int dy, int _ksize);
-		
+
 		static void getPrewittKernel(std::vector<int>& kX, std::vector<int>& kY, int kSize);
-		
+
 		static void Sobel(xImage* pInImage, xImage* pOutImage, int kernelSize);
 
 		static void Prewitt(xImage* pInImage, xImage* pOutImage, int kernelSize);

@@ -272,6 +272,66 @@ bool filter::xFilters::OnlyRed(xImage* pInImage, xImage* pOutImage) {
 	return false;
 }
 
+
+void filter::xFilters::helpFunctionOnlyRedMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		auto pInDataCurrRow = (uint8_t*)(pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (uint8_t*)(pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+
+			pOutDataCurrRow[index + 2] = pInDataCurrRow[index + 2];
+			pOutDataCurrRow[index + 1] = 0;
+			pOutDataCurrRow[index] = 0;
+
+		}
+	}
+}
+
+bool filter::xFilters::OnlyRedMultiThread(xImage* pInImage, xImage* pOutImage) {
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pInData = pInImage->GetData();
+		auto pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		int n = imageH / thSize;
+		int m = imageH % thSize;
+
+		std::vector<std::jthread> threads;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? n + m : n);
+			}
+
+			threads.emplace_back(helpFunctionOnlyRedMultiThread, pInData, pOutData, rowBytes, imageW, low, high);
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+
+
+
+
+
+
 bool filter::xFilters::OnlyGreen(xImage* pInImage, xImage* pOutImage) {
 
 	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
@@ -310,6 +370,55 @@ bool filter::xFilters::OnlyGreen(xImage* pInImage, xImage* pOutImage) {
 	}
 	return false;
 }
+
+void filter::xFilters::helpFunctionOnlyGreenMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+			pOutDataCurrRow[index + 2] = 0;
+			pOutDataCurrRow[index + 1] = pOutDataCurrRow[index + 1];
+			pOutDataCurrRow[index] = 0;
+		}
+	}
+}
+
+bool filter::xFilters::OnlyGreenMultiThread(xImage* pInImage, xImage* pOutImage)
+{
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		uint8_t* pInData = pInImage->GetData();
+		uint8_t* pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? n + m : n);
+			}
+			threads.emplace_back(helpFunctionOnlyGreenMultiThread, pInData, pOutData, rowBytes, imageW, low, high);
+		}
+
+		return true;
+	}
+	return false;
+}
+
+
 bool filter::xFilters::OnlyBlue(xImage* pInImage, xImage* pOutImage) {
 
 	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
@@ -343,6 +452,57 @@ bool filter::xFilters::OnlyBlue(xImage* pInImage, xImage* pOutImage) {
 	}
 	return false;
 }
+
+void filter::xFilters::helpFunctionOnlyBlueMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+			pOutDataCurrRow[index] = pInDataCurrRow[index];
+			pOutDataCurrRow[index + 1] = 0;
+			pOutDataCurrRow[index + 2] = 0;
+		}
+	}
+
+}
+
+bool filter::xFilters::OnlyBlueMultiThread(xImage* pInImage, xImage* pOutImage)
+{
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		uint8_t* pInData = pInImage->GetData();
+		uint8_t* pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionOnlyBlueMultiThread, pInData, pOutData, rowBytes, imageW, low, high);
+		}
+
+		return true;
+	}
+	return false;
+}
+
+
+
 
 
 bool filter::xFilters::GraycaleNegative(xImage* pInImage, xImage* pOutImage) {
@@ -390,43 +550,57 @@ bool filter::xFilters::GraycaleNegative(xImage* pInImage, xImage* pOutImage) {
 	return false;
 }
 
-bool filter::xFilters::Negative(xImage* pInImage, xImage* pOutImage) {
-
-	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
-	{
-		const auto imageW = pInImage->GetWidth();
-		const auto imageH = pInImage->GetHeight();
 
 
-		auto inImageData = (uint8_t*)pInImage->GetData();
-		auto outImageData = (uint8_t*)pOutImage->GetData();
-		auto inRowBytes = pInImage->GetRowBytes();
-		auto outRowBytes = pOutImage->GetRowBytes();
-		int inIndex{}, outIndex{};
+void filter::xFilters::helpFunctionGraycaleNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight) {
 
-		for (int y{}; y < imageH; y++) {
-			inIndex = y * inRowBytes;
-			outIndex = y * outRowBytes;
-			for (int x{}; x < imageW; x++) {
-				uint8_t red = 0, green = 0, blue = 0;
-
-				blue = inImageData[inIndex + 0];
-				green = inImageData[inIndex + 1];
-				red = inImageData[inIndex + 2];
-
-				outImageData[outIndex + 0] = 255 - blue;
-				outImageData[outIndex + 1] = 255 - green;
-				outImageData[outIndex + 2] = 255 - red;
-
-				inIndex += 3;
-				outIndex += 3;
-
-			}
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+			pOutDataCurrRow[index] = 255 - pInDataCurrRow[index];
+			pOutDataCurrRow[index + 1] = 255 - pInDataCurrRow[index + 1];
+			pOutDataCurrRow[index + 2] = 255 - pInDataCurrRow[index + 1];
 		}
+	}
+
+}
+
+bool filter::xFilters::GraycaleNegativeMultiThread(xImage* pInImage, xImage* pOutImage) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pOutImage->GetHeight();
+		const int rowBytes = pOutImage->GetRowBytes();
+
+		uint8_t* pInData = pInImage->GetData();
+		uint8_t* pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionGraycaleNegativeMultiThread, pInData, pOutData, rowBytes, imageW, low, high);
+		}
+
 		return true;
 	}
 	return false;
 }
+
+
 
 bool filter::xFilters::BlackAndWhiteNegative(xImage* pInImage, xImage* pOutImage, float fThreshold) {
 
@@ -469,6 +643,151 @@ bool filter::xFilters::BlackAndWhiteNegative(xImage* pInImage, xImage* pOutImage
 
 			}
 		}
+		return true;
+	}
+
+	return false;
+}
+
+void filter::xFilters::helpFunctionBlackAndWhiteNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight, const float fThreshold) {
+
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+			uint8_t gray = (pInDataCurrRow[index] + pInDataCurrRow[index + 1] + pInDataCurrRow[index + 2]) / 3;
+
+			if (gray > fThreshold)
+				gray = 0;
+			else gray = 0xff;
+
+			pOutDataCurrRow[index] = gray;
+			pOutDataCurrRow[index + 1] = gray;
+			pOutDataCurrRow[index + 2] = gray;
+		}
+	}
+
+}
+
+bool filter::xFilters::BlackAndWhiteNegativeMultiThread(xImage* pInImage, xImage* pOutImage, const float fThreshold) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pIndata = pInImage->GetData();
+		auto pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		std::vector<std::jthread> threads;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionBlackAndWhiteNegativeMultiThread, pIndata, pOutData, rowBytes, imageW, low, high, fThreshold);
+		}
+		return true;
+	}
+	return false;
+}
+
+
+bool filter::xFilters::Negative(xImage* pInImage, xImage* pOutImage) {
+
+	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
+	{
+		const auto imageW = pInImage->GetWidth();
+		const auto imageH = pInImage->GetHeight();
+
+
+		auto inImageData = (uint8_t*)pInImage->GetData();
+		auto outImageData = (uint8_t*)pOutImage->GetData();
+		auto inRowBytes = pInImage->GetRowBytes();
+		auto outRowBytes = pOutImage->GetRowBytes();
+		int inIndex{}, outIndex{};
+
+		for (int y{}; y < imageH; y++) {
+			inIndex = y * inRowBytes;
+			outIndex = y * outRowBytes;
+			for (int x{}; x < imageW; x++) {
+				uint8_t red = 0, green = 0, blue = 0;
+
+				blue = inImageData[inIndex + 0];
+				green = inImageData[inIndex + 1];
+				red = inImageData[inIndex + 2];
+
+				outImageData[outIndex + 0] = 255 - blue;
+				outImageData[outIndex + 1] = 255 - green;
+				outImageData[outIndex + 2] = 255 - red;
+
+				inIndex += 3;
+				outIndex += 3;
+
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+
+void filter::xFilters::helpFunctionNegativeMultiThread(uint8_t* pInData, uint8_t* pOutData, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow(pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+
+			pOutDataCurrRow[index] = 255 - pInDataCurrRow[index];
+			pOutDataCurrRow[index + 1] = 255 - pInDataCurrRow[index + 2];
+			pOutDataCurrRow[index + 2] = 255 - pInDataCurrRow[index + 2];
+
+
+		}
+	}
+}
+
+
+bool filter::xFilters::NegativeMultiThread(xImage* pInImage, xImage* pOutImage)
+{
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		const auto pInData = pInImage->GetData();
+		const auto pOutData = pOutImage->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionNegativeMultiThread, pInData, pOutData, rowBytes, imageW, low, high);
+		}
+
 		return true;
 	}
 

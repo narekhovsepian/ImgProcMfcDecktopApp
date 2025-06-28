@@ -369,6 +369,7 @@ void utility::doubleThreshold1Ch(xImage* src, xImage* dst, float minThrRatio, fl
 		auto iterData = (float*)srcData;
 		for (int y{}; y < height * width; ++y) {
 			if (max < iterData[y]) {
+
 				max = iterData[y];
 			}
 		}
