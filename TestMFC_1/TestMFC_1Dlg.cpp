@@ -1238,7 +1238,8 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Contrast, slider, 0, 255/*min no max = 255*/);
-			filter::xFilters::Contrast(inData, outData, x);
+			//filter::xFilters::Contrast(inData, outData, x);
+			filter::xFilters::ContrastMultiThread(inData, outData, x);
 			break;
 		}
 		case filter::FilterNames::_Brightness:
@@ -1250,7 +1251,8 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Brightness, slider, 0, 255/*min no max = 255*/);
-			filter::xFilters::Brightness(inData, outData, (int)x);
+			//filterfilter::xFilters::Brightness(inData, outData, (int)x);
+			filter::xFilters::BrightnessMultiThread(inData, outData, (int)x);
 			break;
 		}
 		case filter::FilterNames::_Gamma:
@@ -1262,7 +1264,8 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Gamma, slider /*min [0.99...0.1] max [1....4]*/);
-			filter::xFilters::Gamma(inData, outData, x);
+			//filter::xFilters::Gamma(inData, outData, x);
+			filter::xFilters::GammaMultiThread(inData, outData, x);
 			break;
 		}
 		case filter::FilterNames::_GaussianBlurClassic:

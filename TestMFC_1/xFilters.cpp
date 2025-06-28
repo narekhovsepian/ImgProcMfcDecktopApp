@@ -753,7 +753,7 @@ void filter::xFilters::helpFunctionNegativeMultiThread(uint8_t* pInData, uint8_t
 			pOutDataCurrRow[index + 1] = 255 - pInDataCurrRow[index + 2];
 			pOutDataCurrRow[index + 2] = 255 - pInDataCurrRow[index + 2];
 
-			          
+
 		}
 	}
 }
@@ -852,6 +852,75 @@ bool filter::xFilters::Contrast(xImage* pInImage, xImage* pOutImage, float iCont
 	return false;
 }
 
+
+void filter::xFilters::helpFunctionContrastMultiThread(uint8_t* pInData, uint8_t* pOutData,
+	const std::vector<uint8_t>& lut,
+	const int rowBytes,
+	const int Width,
+	const int lowHeight,
+	const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+			pOutDataCurrRow[index] = lut[pInDataCurrRow[index]];
+			pOutDataCurrRow[index + 1] = lut[pInDataCurrRow[index + 1]];
+			pOutDataCurrRow[index + 2] = lut[pInDataCurrRow[index + 2]];
+
+		}
+	}
+
+}
+
+
+
+bool filter::xFilters::ContrastMultiThread(xImage* pInImage, xImage* pOutImage, float iContrast)
+{
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pInData = pInImage->GetData();
+		auto pOutData = pOutImage->GetData();
+
+		const float factor = (259.0f * (iContrast + 255.0f)) / (255.0f * (259.0f - iContrast));
+
+		std::vector<uint8_t> LUT(0x100);
+		for (size_t i{}; i != LUT.size(); ++i) {
+			LUT[i] = utility::saturate_cast(factor * ((float)i - 128.0f) + 128.0f);
+		}
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionContrastMultiThread, pInData, pOutData, LUT, rowBytes, imageW, low, high);
+
+		}
+
+		return true;
+	}
+	return false;
+}
+
+
+
 bool filter::xFilters::Brightness(xImage* pInImage, xImage* pOutImage, int ibrightness) {
 
 	if (pInImage != nullptr && pOutImage != nullptr && pInImage->IsValid() && pOutImage->IsValid())
@@ -904,6 +973,62 @@ bool filter::xFilters::Brightness(xImage* pInImage, xImage* pOutImage, int ibrig
 	}
 	return false;
 
+}
+
+void filter::xFilters::helpFunctionBrightnessMultiThread(uint8_t* pInData, uint8_t* pOutData, const std::vector<uint8_t>& lut, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+
+			pOutDataCurrRow[index] = lut[pInDataCurrRow[index]];
+			pOutDataCurrRow[index + 1] = lut[pInDataCurrRow[index + 1]];
+			pOutDataCurrRow[index + 2] = lut[pInDataCurrRow[index + 2]];
+
+		}
+	}
+}
+
+bool filter::xFilters::BrightnessMultiThread(xImage* pInImage, xImage* pOutImage, int ibrightness) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pInData = pInImage->GetData();
+		auto pOutData = pOutImage->GetData();
+
+		std::vector<uint8_t> LUT(0x100);
+		for (size_t i{}; i != LUT.size(); ++i) {
+			LUT[i] = utility::saturate_cast(int(i + ibrightness));
+		}
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		std::vector<std::jthread> threads;
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionBrightnessMultiThread, pInData, pOutData, LUT, rowBytes, imageW, low, high);
+		}
+
+		return true;
+	}
+	return false;
 }
 
 
@@ -959,6 +1084,67 @@ bool filter::xFilters::Gamma(xImage* pInImage, xImage* pOutImage, float fGamma) 
 		return true;
 	}
 
+	return false;
+}
+
+void filter::xFilters::helpFunctionGammaMultiThread(uint8_t* pInData, uint8_t* pOutData, const std::vector<uint8_t>& lut, const int rowBytes, const int Width, const int lowHeight, const int highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto pInDataCurrRow = (pInData + (y * rowBytes));
+		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
+		for (int x{}, index{}; x < Width; ++x, index += 3) {
+
+			pOutDataCurrRow[index] = lut[pInDataCurrRow[index]];
+			pOutDataCurrRow[index + 1] = lut[pInDataCurrRow[index + 1]];
+			pOutDataCurrRow[index + 2] = lut[pInDataCurrRow[index + 2]];
+
+		}
+	}
+
+}
+
+
+
+bool filter::xFilters::GammaMultiThread(xImage* pInImage, xImage* pOutImage, float fGamma) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid()) {
+
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		auto pIndata = pInImage->GetData();
+		auto pOutData = pOutImage->GetData();
+
+		const float gammaCorrection = 1.0f / fGamma;
+
+		std::vector<uint8_t> gammaLUT(0x100);
+		for (size_t i = 0; i < gammaLUT.size(); i++)
+		{
+			gammaLUT[i] = utility::saturate_cast(255 * std::pow((i / 255.0f), gammaCorrection));
+		}
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int m = imageH % thSize;
+
+		std::vector <std::jthread> threads;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? m + n : n);
+			}
+			threads.emplace_back(helpFunctionGammaMultiThread, pIndata, pOutData, gammaLUT, rowBytes, imageW, low, high);
+		}
+
+
+		return true;
+	}
 	return false;
 }
 

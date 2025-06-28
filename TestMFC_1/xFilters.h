@@ -205,8 +205,23 @@ namespace filter {
 	public:
 		//
 		static bool Contrast(xImage* pInImage, xImage* pOutImage, float iContrast);
+		static bool ContrastMultiThread(xImage* pInImage, xImage* pOutImage, float iContrast);
+	private:
+		inline static void helpFunctionContrastMultiThread(uint8_t* pInData, uint8_t* pOutData, const std::vector<uint8_t>& lut, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool Brightness(xImage* pInImage, xImage* pOutImage, int ibrightness);
+		static bool BrightnessMultiThread(xImage* pInImage, xImage* pOutImage, int ibrightness);
+	private:
+		inline static void helpFunctionBrightnessMultiThread(uint8_t* pInData, uint8_t* pOutData, const std::vector<uint8_t>& lut, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool Gamma(xImage* pInImage, xImage* pOutImage, float fGamma);
+		static bool GammaMultiThread(xImage* pInImage, xImage* pOutImage, float fGamma);
+	private:
+		inline static void helpFunctionGammaMultiThread(uint8_t* pInData, uint8_t* pOutData, const std::vector<uint8_t>& lut, const int rowBytes, const int Width, const int lowHeight, const int highHeight);
+	public:
+		//
 		static bool GaussianBlurRealClassic(xImage* pInImage, xImage* pOutImage, int iKernelSize);
 		static bool GaussianBlurSeperableConvolution(xImage* pInImage, xImage* pOutImage, int kernelSize, float sigmaX = 0, float sigmaY = 0);
 		static float* GenereateGaussianKernelOpencvVersion(int kernelsize, float sigma);
