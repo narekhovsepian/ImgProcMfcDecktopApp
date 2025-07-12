@@ -209,7 +209,7 @@ BOOL CTestMFC1Dlg::OnInitDialog()
 	/////////////////////////
 	//////// Support OpenCl ///////////////////
 
-	//initializeOpenClContext();
+	initializeOpenClContext();
 
 	////// enable Gpu or Disable for Computing /////////////
 
