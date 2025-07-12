@@ -100,5 +100,21 @@ public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 
-	
+	// Support OpenCl Functions for initialize Context /////////////////////////////
+	cl::Context _context;
+
+	// int 0 device connectex pci GPU
+	// int 1 device onboard in cpu GPU 
+	bool initializeOpenClContext(int g = 0);
+
+	//////////// CPU or GPU  computing //////////////////////////////////////////;
+
+	enum CpuGpu {
+		CPUMULTITHREAD = 0,
+		CPU,
+		GPU,
+	};
+
+	CpuGpu _cpuGpu;
+
 };

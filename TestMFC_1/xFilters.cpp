@@ -628,7 +628,7 @@ bool filter::xFilters::BlackAndWhiteNegative(xImage* pInImage, xImage* pOutImage
 				green = inImageData[inIndex + 1];
 				red = inImageData[inIndex + 2];
 
-				gray = (blue + green + red) / 2;
+				gray = (blue + green + red) / 3;
 
 				if (gray > fThreshold)
 					gray = 0;
@@ -2507,4 +2507,65 @@ bool filter::xFilters::CopyOriginalToTransformedImage(xImage* pInImage, xImage* 
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+bool filter::xFilters::GenericOpenclRunFile(xImage* pInImage, xImage* pOutImage, cl::Context& context,
+	const std::string& inputFileCl, const std::string& functionName, const float genericValue) {
+
+	if (pInImage && pOutImage && pInImage->IsValid() && pOutImage->IsValid())
+	{
+		const int imageW = pInImage->GetWidth();
+		const int imageH = pInImage->GetHeight();
+		const int rowBytes = pInImage->GetRowBytes();
+
+		uint8_t* pInData = pInImage->GetData();
+		uint8_t* pOutData = pOutImage->GetData();
+
+		std::ifstream file(inputFileCl);
+		std::string src(std::istreambuf_iterator<char>(file), {});
+		file.close();
+
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+
+		auto program = cl::Program(context, src);
+
+		auto err = program.build("-cl-std=CL3.0");
+
+		cl::Buffer aBuf(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, imageH * rowBytes, pInData, nullptr);
+
+		cl::Buffer cBuf(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, imageH * rowBytes);
+
+
+		cl::Kernel kernel(program, functionName);
+
+		kernel.setArg(0, aBuf);
+		kernel.setArg(1, cBuf);
+		kernel.setArg(2, genericValue);
+		//kernel.setArg(2, imageW);
+		//kernel.setArg(3, imageH);
+		//kernel.setArg(2, rowBytes);
+
+	    //cl::CommandQueue queue(context, devices.front(), CL_QUEUE_PROFILING_ENABLE);
+		cl::CommandQueue queue(context, CL_QUEUE_PROFILING_ENABLE);
+
+		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(imageW * imageH), cl::NullRange);
+		
+
+		queue.enqueueReadBuffer(cBuf, CL_TRUE, 0, imageH * rowBytes, pOutData);
+		queue.finish();
+
+		/*std::chrono::steady_clock::time_point start1, end1;
+		evt.getProfilingInfo(CL_PROFILING_COMMAND_START, &start1);
+		evt.getProfilingInfo(CL_PROFILING_COMMAND_END, &end1);*/
+
+		return true;
+	}
+	return false;
+}
+
+
+
 

@@ -89,6 +89,8 @@ CTestMFC1Dlg::CTestMFC1Dlg(CWnd* pParent /*=nullptr*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
+
+
 }
 
 void CTestMFC1Dlg::DoDataExchange(CDataExchange* pDX)
@@ -205,7 +207,15 @@ BOOL CTestMFC1Dlg::OnInitDialog()
 	_genericSlider2.ShowWindowXCslider(SW_HIDE);
 
 	/////////////////////////
+	//////// Support OpenCl ///////////////////
 
+	//initializeOpenClContext();
+
+	////// enable Gpu or Disable for Computing /////////////
+
+	_cpuGpu = CpuGpu::CPUMULTITHREAD;
+
+	///////////////////////////////////////////
 
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -1180,9 +1190,16 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 		switch ((filter::FilterNames)iCurrFilter)
 		{
 		case filter::FilterNames::_Grayscale:
+		{
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Grayscale");
+
+			//filter::xFilters::GrayscaleMultiThread(inData, outData);
+
 			//filter::xFilters::Grayscale(inData, outData);
-			filter::xFilters::GrayscaleMultiThread(inData, outData);
+
 			break;
+		}
 		case filter::FilterNames::_BlackAndWhite:
 		{
 			//min = 0 and max = 255 positive number
@@ -1191,32 +1208,77 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				filter::xFilters::CopyOriginalToTransformedImage(inData, outData);
 				break;
 			}
-			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_BlackAndWhite, slider, 0, 255/*min no max = 255*/);
-			//filter::xFilters::BlackAndWhite(inData, outData, x);
 
-			filter::xFilters::BlackAndWhiteMultiThread(inData, outData, x);
+			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_BlackAndWhite, slider, 0, 255/*min no max = 255*/);
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhite", x);
+
+			//filter::xFilters::BlackAndWhiteMultiThread(inData, outData, x);
+
+
+			filter::xFilters::BlackAndWhite(inData, outData, x);
+
 			break;
 		}
 		case filter::FilterNames::_OnlyRed:
-			//filter::xFilters::OnlyRed(inData, outData);
-			filter::xFilters::OnlyRedMultiThread(inData, outData);
+		{	//
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
+
+
+			//filter::xFilters::OnlyRedMultiThread(inData, outData);
+
+			 //filter::xFilters::OnlyRed(inData, outData);
+
 			break;
+		}
 		case filter::FilterNames::_OnlyGreen:
+		{
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
+
+			//filter::xFilters::OnlyGreenMultiThread(inData, outData);
+
 			//filter::xFilters::OnlyGreen(inData, outData);
-			filter::xFilters::OnlyGreenMultiThread(inData, outData);
+
+
 			break;
+		}
 		case filter::FilterNames::_OnlyBlue:
+		{
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyBlue");
+
+			//filter::xFilters::OnlyBlueMultiThread(inData, outData);
+
+
 			//filter::xFilters::OnlyBlue(inData, outData);
-			filter::xFilters::OnlyBlueMultiThread(inData, outData);
+
 			break;
+		}
 		case filter::FilterNames::_GraycaleNegative:
+		{
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "GraycaleNegative");
+
+			//filter::xFilters::GraycaleNegativeMultiThread(inData, outData);
+
 			//filter::xFilters::GraycaleNegative(inData, outData);
-			filter::xFilters::GraycaleNegativeMultiThread(inData, outData);
+
+
 			break;
+		}
 		case filter::FilterNames::_Negative:
+		{
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Negative");
+
+			//filter::xFilters::NegativeMultiThread(inData, outData);
+
 			//filter::xFilters::Negative(inData, outData);
-			filter::xFilters::NegativeMultiThread(inData, outData);
+
 			break;
+		}
 		case filter::FilterNames::_B_W_Negative:
 		{	// min = 0 max = 255 positive number
 			int slider = _genericSlider0.GetPos();
@@ -1225,8 +1287,14 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_B_W_Negative, slider, 0, 255 /*min no max = 255*/);
+
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhiteNegative", x);
+
+			//filter::xFilters::BlackAndWhiteNegativeMultiThread(inData, outData, x);
+
 			//filter::xFilters::BlackAndWhiteNegative(inData, outData, x);
-			filter::xFilters::BlackAndWhiteNegativeMultiThread(inData, outData, x);
+
 			break;
 		}
 		case filter::FilterNames::_Contrast:
@@ -1238,8 +1306,15 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Contrast, slider, 0, 255/*min no max = 255*/);
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Contrast", x);
+
+
+			//filter::xFilters::ContrastMultiThread(inData, outData, x);
+
+
 			//filter::xFilters::Contrast(inData, outData, x);
-			filter::xFilters::ContrastMultiThread(inData, outData, x);
+
 			break;
 		}
 		case filter::FilterNames::_Brightness:
@@ -1251,8 +1326,15 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Brightness, slider, 0, 255/*min no max = 255*/);
-			//filterfilter::xFilters::Brightness(inData, outData, (int)x);
-			filter::xFilters::BrightnessMultiThread(inData, outData, (int)x);
+
+
+			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl1.cl", "Brightness", x);
+
+			//filter::xFilters::BrightnessMultiThread(inData, outData, (int)x);
+
+
+			//filter::xFilters::Brightness(inData, outData, (int)x);}
+
 			break;
 		}
 		case filter::FilterNames::_Gamma:
@@ -1431,3 +1513,28 @@ BOOL CTestMFC1Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 }
 
 
+// Support OpenCl initialize
+bool CTestMFC1Dlg::initializeOpenClContext(int g) {
+
+
+	std::vector<cl::Platform> platforms;
+	cl::Platform::get(&platforms);
+
+	if (platforms.empty()) {
+
+		return false;
+	}
+
+
+	auto platform = platforms[0];
+
+	std::vector<cl::Device> devices;
+	platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+	if (devices.empty()) {
+		return false;
+	}
+
+	_context = cl::Context(devices);
+
+}

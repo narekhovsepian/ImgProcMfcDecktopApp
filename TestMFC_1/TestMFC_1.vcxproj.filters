@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Opencl">
+      <UniqueIdentifier>{2bf25331-6275-4e9c-80ae-aeb3f80733a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestMFC_1.h">
@@ -92,6 +95,12 @@
   <ItemGroup>
     <None Include="res\TestMFC1.rc2">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="xfilterOpenCl.cl">
+      <Filter>Source Files\Opencl</Filter>
+    </None>
+    <None Include="xfilterOpenCl1.cl">
+      <Filter>Source Files\Opencl</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

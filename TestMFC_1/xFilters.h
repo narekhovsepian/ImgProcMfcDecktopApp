@@ -10,6 +10,18 @@
 #include <thread>
 #include <mutex>
 
+//#define CL_TARGET_OPENCL_VERSION 300
+#define CL_TARGET_OPENCL_VERSION 120
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+
+#include <CL/cl2.hpp>
+//#include <CL/opencl.hpp>
+#include <CL/cl.h>
+
+
+
+
 class xImage;
 
 namespace filter {
@@ -285,6 +297,12 @@ namespace filter {
 
 
 		static void Canny(xImage* pInImage, xImage* pOutImage);
+
+
+		////////////// Add OpenCL support for GPU ///////////////////////////////////
+
+		static bool GenericOpenclRunFile(xImage* pInImage, xImage* pOutImage, cl::Context& context,
+			const std::string& inputFileCl, const std::string& functionName, const float genericValue = 0.0f);
 
 	};
 
