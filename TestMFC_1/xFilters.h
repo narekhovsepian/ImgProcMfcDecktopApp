@@ -275,6 +275,13 @@ namespace filter {
 		/// <param name="kernelX">int</param>
 		/// <param name="kernelY">int</param>
 		static void SepConvolution1D(xImage* pInImage, xImage* pOutImage, const std::vector<int>& kernelX, const std::vector<int>& kernelY);
+		static bool SepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(xImage* pInImage, xImage* pOutImage, const std::vector<int>& kernelX, const std::vector<int>& kernelY);
+		private:
+		static void helpSepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(const int id,const uint8_t* pSrc, uint8_t* pDst, 
+			const int rowBytesSrc,const int rowbytesDst,const int width,const int low, const int high,const std::vector<int>& kernelX, const std::vector<int>& kernelY
+		);
+		public:
+
 
 		/// <summary>
 		///

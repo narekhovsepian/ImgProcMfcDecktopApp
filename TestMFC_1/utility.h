@@ -5,6 +5,8 @@
 #include <numbers>
 #include <vector>
 #include <fstream>
+#include <thread>
+
 namespace utility {
 
 
@@ -19,22 +21,37 @@ namespace utility {
 
 	static inline double atan_f64(double y, double x);
 
-	void ConvertToGray(xImage* Indata, xImage* outData);
+	void ConvertToGray8_1Ch(xImage* Indata, xImage* outData);
+	bool ConvertToGrayMultiThreadByLayer3Ch8_2_8Ch1(xImage* Indata, xImage* outData);
+	void helpConvertToGrayMultiThreadByLayer8_1Ch(uint8_t* InData, uint8_t* outData,
+		const int& rowBytesSrc, const int& rowBytesDst,
+		const int& width, const int& lowHeight, const int& highHeight);
 
 	// Split image in 3 channels outB outG outR
 	bool Split(xImage* srcBGR, xImage* outB = nullptr, xImage* outG = nullptr, xImage* outR = nullptr);
 
 	// Merge 3 colors out BGR image
 	bool Merge(xImage* srcB, xImage* srcG, xImage* srcR, xImage* dstBGR);
+	bool MergeMultiThreadByLayer8_1Ch_3Ch(xImage* srcB, xImage* srcG, xImage* srcR, xImage* dstBGR);
+	void helpMergeMultiThreadByLayer8_1Ch_3Ch(uint8_t* srcB, uint8_t* srcG, uint8_t* srcR, uint8_t* dstBGR, const int& rowBytesSrc,
+		const int& rowBytesDst, const int& width, const int& lowHeight, const int& highHeight);
+
 
 	bool addWeighted1Ch(xImage* src1, xImage* src2, xImage* dst, float alpha, float beta, float gamma);
+	void helpaddWeightedMultiThreadByLayer32int_1Ch_Out32double_1Ch(const uint8_t* src1,const uint8_t* src2, uint8_t* dst,
+		const int& rowBytesSrc, const int& rowBytesDst, const int& width, const int& lowHeigh, const int& highHeight,
+		const float& alpha, const float& beta, const float& gamma);
+	bool addWeightedMultiThreadByLayer32int_1Ch_Out32double_1Ch(xImage* src1, xImage* src2, xImage* dst, 
+		const float& alpha, const float& beta, const float& gamma);
 
 
 	// Convert float32 to unsigned char
 	// @param src type 32 bit float
 	// @param dst type 8 bit uchar
 	bool ConvertTo32F28U1Ch(xImage* src, xImage* dst);
-
+	bool ConvertToMultiThreadByLayer32F28U1Ch(xImage* src, xImage* dst);
+	void helpConvertToMultiThreadByLayer32F28U1Ch(const uint8_t* pSrc, uint8_t* pDst, const int rowBytesSrc, const int rowBytesDst,
+		const int width, const int low, const int high);
 	// Convert double 64 to unsigned char
 	// @param src type 64 bit double 
 	// @param dst type 8 bit uchar 
@@ -73,7 +90,9 @@ namespace utility {
 	/// <param name="src2">float 32F</param>
 	/// <param name="dst">float 32F</param>
 	void magnitude32F1Ch(xImage* src1, xImage* src2, xImage* dst);
-
+	void helpMagnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch(const uint8_t* pSrc1,const uint8_t* pSrc2, uint8_t* pDst, const int& rowBytesSrc1,
+		const int& rowBytesSrc2, const int& width, const int& lowHeight, const int& highHeight);
+	bool magnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch(xImage* src1, xImage* src2, xImage* dst);
 
 
 	/// <summary>
@@ -105,8 +124,11 @@ namespace utility {
 	template<typename _Ty>
 	bool writeData2File(xImage* src);
 
-
 	void console();
+
+	bool dataEqual(xImage* pInImage, xImage* pOutImage);
+
+
 }
 
 

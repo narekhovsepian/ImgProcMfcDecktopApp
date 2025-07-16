@@ -209,11 +209,15 @@ BOOL CTestMFC1Dlg::OnInitDialog()
 	/////////////////////////
 	//////// Support OpenCl ///////////////////
 
-	initializeOpenClContext();
 
 	////// enable Gpu or Disable for Computing /////////////
 
-	_cpuGpu = CpuGpu::CPUMULTITHREAD;
+	_cpuGpu = CpuGpu::CPUMULTITHREADBYLAYER;
+
+	if (_cpuGpu == CpuGpu::GPU) {
+		initializeOpenClContext();
+
+	}
 
 	///////////////////////////////////////////
 
@@ -1191,13 +1195,15 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 		{
 		case filter::FilterNames::_Grayscale:
 		{
-
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Grayscale");
-
-			//filter::xFilters::GrayscaleMultiThread(inData, outData);
-
-			//filter::xFilters::Grayscale(inData, outData);
-
+			if (_cpuGpu == GPU) {
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Grayscale");
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
+				filter::xFilters::GrayscaleMultiThread(inData, outData);
+			}
+			else {
+				//filter::xFilters::Grayscale(inData, outData);
+			}
 			break;
 		}
 		case filter::FilterNames::_BlackAndWhite:
@@ -1211,72 +1217,109 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_BlackAndWhite, slider, 0, 255/*min no max = 255*/);
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhite", x);
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhite", x);
 
-			//filter::xFilters::BlackAndWhiteMultiThread(inData, outData, x);
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
+				filter::xFilters::BlackAndWhiteMultiThread(inData, outData, x);
 
-			filter::xFilters::BlackAndWhite(inData, outData, x);
-
+			}
+			else {
+				filter::xFilters::BlackAndWhite(inData, outData, x);
+			}
 			break;
 		}
 		case filter::FilterNames::_OnlyRed:
 		{	//
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
 
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			//filter::xFilters::OnlyRedMultiThread(inData, outData);
+				filter::xFilters::OnlyRedMultiThread(inData, outData);
 
-			 //filter::xFilters::OnlyRed(inData, outData);
+			}
+			else {
+				filter::xFilters::OnlyRed(inData, outData);
+			}
 
 			break;
 		}
 		case filter::FilterNames::_OnlyGreen:
 		{
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyRed", x);
 
-			//filter::xFilters::OnlyGreenMultiThread(inData, outData);
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			//filter::xFilters::OnlyGreen(inData, outData);
+				filter::xFilters::OnlyGreenMultiThread(inData, outData);
 
+
+			}
+			else {
+				filter::xFilters::OnlyGreen(inData, outData);
+
+			}
 
 			break;
 		}
 		case filter::FilterNames::_OnlyBlue:
 		{
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyBlue");
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "OnlyBlue");
 
-			//filter::xFilters::OnlyBlueMultiThread(inData, outData);
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
+				filter::xFilters::OnlyBlueMultiThread(inData, outData);
 
-			//filter::xFilters::OnlyBlue(inData, outData);
+			}
+			else {
+				filter::xFilters::OnlyBlue(inData, outData);
+			}
 
 			break;
 		}
 		case filter::FilterNames::_GraycaleNegative:
 		{
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "GraycaleNegative");
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "GraycaleNegative");
-
-			//filter::xFilters::GraycaleNegativeMultiThread(inData, outData);
-
-			//filter::xFilters::GraycaleNegative(inData, outData);
-
-
+				filter::xFilters::GraycaleNegativeMultiThread(inData, outData);
+			}
+			else {
+				filter::xFilters::GraycaleNegative(inData, outData);
+			}
 			break;
 		}
 		case filter::FilterNames::_Negative:
 		{
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Negative");
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Negative");
+				filter::xFilters::NegativeMultiThread(inData, outData);
 
-			//filter::xFilters::NegativeMultiThread(inData, outData);
-
-			//filter::xFilters::Negative(inData, outData);
-
+			}
+			else {
+				filter::xFilters::Negative(inData, outData);
+			}
 			break;
 		}
 		case filter::FilterNames::_B_W_Negative:
@@ -1287,14 +1330,18 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_B_W_Negative, slider, 0, 255 /*min no max = 255*/);
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhiteNegative", x);
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
+				filter::xFilters::BlackAndWhiteNegativeMultiThread(inData, outData, x);
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "BlackAndWhiteNegative", x);
-
-			//filter::xFilters::BlackAndWhiteNegativeMultiThread(inData, outData, x);
-
-			//filter::xFilters::BlackAndWhiteNegative(inData, outData, x);
-
+			}
+			else {
+				filter::xFilters::BlackAndWhiteNegative(inData, outData, x);
+			}
 			break;
 		}
 		case filter::FilterNames::_Contrast:
@@ -1307,14 +1354,18 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Contrast, slider, 0, 255/*min no max = 255*/);
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Contrast", x);
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Contrast", x);
 
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			//filter::xFilters::ContrastMultiThread(inData, outData, x);
-
-
-			//filter::xFilters::Contrast(inData, outData, x);
-
+				filter::xFilters::ContrastMultiThread(inData, outData, x);
+			}
+			else {
+				filter::xFilters::Contrast(inData, outData, x);
+			}
 			break;
 		}
 		case filter::FilterNames::_Brightness:
@@ -1327,14 +1378,17 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Brightness, slider, 0, 255/*min no max = 255*/);
 
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl1.cl", "Brightness", x);
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
 
-			filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl1.cl", "Brightness", x);
-
-			//filter::xFilters::BrightnessMultiThread(inData, outData, (int)x);
-
-
-			//filter::xFilters::Brightness(inData, outData, (int)x);}
-
+				filter::xFilters::BrightnessMultiThread(inData, outData, (int)x);
+			}
+			else {
+				filter::xFilters::Brightness(inData, outData, (int)x);
+			}
 			break;
 		}
 		case filter::FilterNames::_Gamma:
@@ -1346,8 +1400,20 @@ void CTestMFC1Dlg::OnBnClickedButton1applyfilter()
 				break;
 			}
 			x = filter::calculateSliderValueForCurrentFilter(filter::FilterNames::_Gamma, slider /*min [0.99...0.1] max [1....4]*/);
-			//filter::xFilters::Gamma(inData, outData, x);
-			filter::xFilters::GammaMultiThread(inData, outData, x);
+
+			if (_cpuGpu == GPU)
+			{
+				filter::xFilters::GenericOpenclRunFile(inData, outData, _context, "xfilterOpenCl.cl", "Gamma", x);
+
+			}
+			else if (_cpuGpu == CPUMULTITHREADBYLAYER) {
+
+				filter::xFilters::GammaMultiThread(inData, outData, x);
+			}
+			else {
+				filter::xFilters::Gamma(inData, outData, x);
+			}
+
 			break;
 		}
 		case filter::FilterNames::_GaussianBlurClassic:
@@ -1537,4 +1603,5 @@ bool CTestMFC1Dlg::initializeOpenClContext(int g) {
 
 	_context = cl::Context(devices);
 
+	return true;
 }

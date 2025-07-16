@@ -110,7 +110,7 @@ public:
 	//////////// CPU or GPU  computing //////////////////////////////////////////;
 
 	enum CpuGpu {
-		CPUMULTITHREAD = 0,
+		CPUMULTITHREADBYLAYER = 0,
 		CPU,
 		GPU,
 	};

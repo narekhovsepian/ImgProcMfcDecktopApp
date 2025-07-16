@@ -378,7 +378,7 @@ void filter::xFilters::helpFunctionOnlyGreenMultiThread(uint8_t* pInData, uint8_
 		auto pOutDataCurrRow = (pOutData + (y * rowBytes));
 		for (int x{}, index{}; x < Width; ++x, index += 3) {
 			pOutDataCurrRow[index + 2] = 0;
-			pOutDataCurrRow[index + 1] = pOutDataCurrRow[index + 1];
+			pOutDataCurrRow[index + 1] = pInDataCurrRow[index + 1];
 			pOutDataCurrRow[index] = 0;
 		}
 	}
@@ -1147,6 +1147,15 @@ bool filter::xFilters::GammaMultiThread(xImage* pInImage, xImage* pOutImage, flo
 	}
 	return false;
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2112,6 +2121,166 @@ void filter::xFilters::SepConvolution1D(xImage* pInImage, xImage* pOutImage, con
 
 }
 
+//std::mutex mtx;
+//
+//void filter::xFilters::helpSepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(const int id, const uint8_t* pSrc, uint8_t* pDst,
+//	const int rowBytesSrc, const int rowbytesDst, const int width, const int low, const int high,
+//	const std::vector<int>& kernelX, const std::vector<int>& kernelY)
+//{
+//	int radiusX = int(kernelX.size() / 2);
+//	int radiusY = int(kernelY.size() / 2);
+//
+//	int thSize = std::thread::hardware_concurrency();
+//
+//	// allocate temprorary space
+//	int tmpRow = ((high - low) + (2 * radiusY));
+//	int size = ((high - low) + (2 * radiusY)) * width;
+//	float* tmpData = new float[size];
+//
+//
+//	if (id != 0 && id != (thSize - 1)) {
+//
+//		for (int y{}; y < radiusY; ++y) {
+//			auto pCurrRowSrc = (pSrc + ((low - radiusY + y) * rowBytesSrc));
+//			auto pCurrRowTmp = (tmpData + (y * width));
+//			for (int x{}; x < width; ++x) {
+//				pCurrRowTmp[x] = pCurrRowSrc[x];
+//			}
+//		}
+//
+//		for (int y{ tmpRow - radiusY }, i{}; y > tmpRow; ++y, ++i) {
+//			auto pCurrRowSrc = (pSrc + (high + i) * rowBytesSrc);
+//			auto pCurrRowTmp = (tmpData + (y * width));
+//			for (int x{}; x < width; ++x) {
+//				pCurrRowTmp[x] = pCurrRowSrc[x];
+//			}
+//		}
+//	}
+//
+//
+//	auto outData = pDst;
+//
+//	int leftradius{ radiusY }, rightradius{ radiusY }, topRadius{ radiusX }, botomRadius{ radiusX };
+//
+//	int currentRowPixel{};
+//
+//	float accumlator{};
+//	int ksum{};
+//
+//	//std::lock_guard<std::mutex> lock(mtx);
+//
+//	for (int y{ low }, i{}; y < high; ++y, ++i) {
+//
+//		float* tmpCurrentRow = (float*)(tmpData + (i * width));
+//		uint8_t* inCurrentRow = (uint8_t*)(pSrc + (y * rowBytesSrc));
+//		for (int x{}; x < width; ++x) {
+//
+//			leftradius = min(radiusY, x);
+//
+//			rightradius = x + radiusY > width - 1 ? --rightradius : rightradius;
+//
+//			for (int kx = -1 * leftradius; kx <= rightradius; ++kx) {
+//
+//				accumlator += kernelY[kx + radiusY] * inCurrentRow[x + kx];
+//				ksum += kernelY[kx + radiusY];
+//			}
+//
+//
+//			tmpCurrentRow[i] = accumlator;
+//			accumlator = 0;
+//			ksum = 0;
+//
+//		}
+//
+//		rightradius = radiusX;
+//	}
+//
+//
+//
+//
+//	for (int x{}; x < width; ++x) {
+//
+//		for (int y{ low }, i{ id == 0 && id == thSize ? 0 : radiusY }; y < high; ++y, ++i) {
+//
+//			topRadius = ((id == 0 || id == thSize) ? min(y, radiusY) : radiusY);
+//			//botomRadius = y > high - 1 ? --botomRadius : botomRadius;
+//
+//			currentRowPixel = y * rowbytesDst;
+//
+//
+//			for (int ky = -1 * topRadius; ky <= botomRadius; ++ky) {
+//
+//				//int currentColComp = (y + ky) * rowbytes + x;
+//				int currentColComp = (i + ky) * width + x;
+//				accumlator += kernelX[ky + radiusY] * tmpData[currentColComp];
+//				ksum += kernelX[ky + radiusX];
+//			}
+//
+//
+//			((float*)(outData + currentRowPixel))[x] = accumlator / ksum;
+//
+//			ksum = 0;
+//			accumlator = 0;
+//		}
+//		botomRadius = radiusY;
+//	}
+//
+//
+//	delete[] tmpData;
+//}
+//
+//
+//bool filter::xFilters::SepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(xImage* pInImage, xImage* pOutImage, const std::vector<int>& kernelX, const std::vector<int>& kernelY)
+//{
+//	if (pInImage && pOutImage && pInImage->IsValid()) {
+//
+//		const int imageW = pInImage->GetWidth();
+//		const int imageH = pInImage->GetHeight();
+//		const int rowBytesSrc = pInImage->GetRowBytes();
+//
+//		const uint8_t* pSrc = pInImage->GetData();
+//
+//		if (pOutImage->IsValid()) {
+//			pOutImage->deAllocateSpace();
+//		}
+//
+//		pOutImage->allocateSpace(imageW, imageH, COLOR_ORDER::_FLOAT);
+//
+//		const int rowBytesDst = pOutImage->GetRowBytes();
+//
+//		uint8_t* pDst = pOutImage->GetData();
+//
+//		const int radiusY = kernelY.size() / 2;
+//
+//		const int thSize = std::thread::hardware_concurrency();
+//
+//		const int n = imageH / thSize;
+//		const int mn = imageH % thSize;
+//
+//		int low{};
+//		int high{ n };
+//
+//		std::vector<std::jthread> threads;
+//
+//		for (int i{}; i < thSize; ++i) {
+//			if (i != 0) {
+//				low += n;
+//				high += (i == thSize - 1 ? n + mn : n);
+//			}
+//			threads.emplace_back(helpSepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch, i, pSrc, pDst, rowBytesSrc, rowBytesDst, imageW,
+//				low, high, kernelX, kernelY);
+//		}
+//
+//		return true;
+//	}
+//	return false;
+//}
+
+
+
+
+
+
 
 
 
@@ -2331,27 +2500,32 @@ void filter::xFilters::Sobel(xImage* pInImage, xImage* pOutImage, int kernelSize
 	std::vector<int> kernelY;
 
 
-	utility::ConvertToGray(pInImage, &gray);
+	//utility::ConvertToGray8_1Ch(pInImage, &gray);
+
+	utility::ConvertToGrayMultiThreadByLayer3Ch8_2_8Ch1(pInImage, &gray);
 
 	getSobelKernels(kernelX, kernelY, 1, 0, kernelSize);
 
+	//SepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(&gray, &grad_x, kernelX, kernelY);
 	SepConvolution1D(&gray, &grad_x, kernelX, kernelY);
+	//SepConvolutionMultiThreadByLayer8b1Ch_2_32F1Ch(&gray, &grad_y, kernelY, kernelX);
 
 	SepConvolution1D(&gray, &grad_y, kernelY, kernelX);
 
-	utility::magnitude32F1Ch(&grad_x, &grad_y, &magnitude);
+	utility::magnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch(&grad_x, &grad_y, &magnitude);
 
-	utility::ConvertTo32F28U1Ch(&magnitude, &out);
+	utility::ConvertToMultiThreadByLayer32F28U1Ch(&magnitude, &out);
 
 	//utility::addWeighted1D(&grad_x, &grad_y, &magnitude, 0.5f, 0.5f, 0.0f);
 
 	//utility::Merge(&grad_y, &grad_y, &grad_y, pOutImage);
 
+	utility::ConvertTo32F28U1Ch(&magnitude, &out);
 
-	//utility::Merge(&grad_x, &grad_x, &grad_x, pOutImage);
+	//utility::Merge(&gray, &gray, &gray, pOutImage);
 
 
-	utility::Merge(&out, &out, &out, pOutImage);
+	utility::MergeMultiThreadByLayer8_1Ch_3Ch(&out, &out, &out, pOutImage);
 
 }
 
@@ -2372,7 +2546,7 @@ void filter::xFilters::Prewitt(xImage* pInImage, xImage* pOutImage, int kernelSi
 	getPrewittKernel(kernelX, kernelY, kernelSize);
 
 
-	utility::ConvertToGray(pInImage, &gray);
+	utility::ConvertToGray8_1Ch(pInImage, &gray);
 
 	SepConvolution1D(&gray, &grad_x, kernelX, kernelY);
 
@@ -2441,7 +2615,7 @@ void filter::xFilters::Canny(xImage* pInImage, xImage* pOutImage) {
 	xImage doubleThreshold;
 
 
-	utility::ConvertToGray(pInImage, &gray);
+	utility::ConvertToGray8_1Ch(pInImage, &gray);
 
 	std::vector<std::vector<float>> kernel;
 
@@ -2527,14 +2701,14 @@ bool filter::xFilters::GenericOpenclRunFile(xImage* pInImage, xImage* pOutImage,
 		file.close();
 
 
-		auto start = std::chrono::high_resolution_clock::now();
+		//auto start = std::chrono::high_resolution_clock::now();
 
 
 		auto program = cl::Program(context, src);
 
 		auto err = program.build("-cl-std=CL3.0");
 
-		cl::Buffer aBuf(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, imageH * rowBytes, pInData, nullptr);
+		cl::Buffer aBuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageH * rowBytes, pInData, nullptr);
 
 		cl::Buffer cBuf(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, imageH * rowBytes);
 
@@ -2548,14 +2722,22 @@ bool filter::xFilters::GenericOpenclRunFile(xImage* pInImage, xImage* pOutImage,
 		//kernel.setArg(3, imageH);
 		//kernel.setArg(2, rowBytes);
 
-	    //cl::CommandQueue queue(context, devices.front(), CL_QUEUE_PROFILING_ENABLE);
+		//cl::CommandQueue queue(context, devices.front(), CL_QUEUE_PROFILING_ENABLE);
 		cl::CommandQueue queue(context, CL_QUEUE_PROFILING_ENABLE);
 
 		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(imageW * imageH), cl::NullRange);
-		
+
 
 		queue.enqueueReadBuffer(cBuf, CL_TRUE, 0, imageH * rowBytes, pOutData);
 		queue.finish();
+
+		///auto end = std::chrono::high_resolution_clock::now();
+
+
+		//auto ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+		//TRACE(L"\n\n1ms-%d\n\n", ms1);
+
 
 		/*std::chrono::steady_clock::time_point start1, end1;
 		evt.getProfilingInfo(CL_PROFILING_COMMAND_START, &start1);

@@ -26,9 +26,7 @@ double utility::atan_f64(double y, double x)
 
 
 
-
-
-void utility::ConvertToGray(xImage* pInImage, xImage* pOutImage) {
+void utility::ConvertToGray8_1Ch(xImage* pInImage, xImage* pOutImage) {
 
 	if (pInImage && pOutImage && pInImage->IsValid()) {
 
@@ -60,6 +58,68 @@ void utility::ConvertToGray(xImage* pInImage, xImage* pOutImage) {
 	}
 
 }
+
+void utility::helpConvertToGrayMultiThreadByLayer8_1Ch(uint8_t* InData, uint8_t* outData,
+	const int& rowBytesSrc, const int& rowBytesDst,
+	const int& width, const int& lowHeight, const int& highHeight)
+{
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto srcRow = (InData + y * rowBytesSrc);
+		auto dstRow = (outData + y * rowBytesDst);
+		for (int x{}, i{}; x < width; ++x, i += 3) {
+			dstRow[x] = saturate_cast((srcRow[i] + srcRow[i + 1] + srcRow[i + 2]) / 3);
+		}
+	}
+}
+
+
+
+bool utility::ConvertToGrayMultiThreadByLayer3Ch8_2_8Ch1(xImage* InData, xImage* outData) {
+	if (InData && outData && InData->IsValid()) {
+
+		const int imageW = InData->GetWidth();
+		const int imageH = InData->GetHeight();
+
+		const int rowBytesSrc = InData->GetRowBytes();
+
+		if (!outData->IsValid()) {
+			outData->allocateSpace(imageW, imageH, COLOR_ORDER::_BYTE);
+		}
+
+		const int rowBytesDst = outData->GetRowBytes();
+
+		uint8_t* pInData = InData->GetData();
+		uint8_t* pOutData = outData->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		std::vector<std::jthread> threads;
+
+		const int n = imageH / thSize;
+		const int mn = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += ((i == thSize - 1) ? n + mn : n);
+			}
+			threads.emplace_back(helpConvertToGrayMultiThreadByLayer8_1Ch, pInData, pOutData, rowBytesSrc, rowBytesDst, imageW, low, high);
+
+		}
+		return true;
+	}
+
+	return false;
+}
+
+
+
+
+
+
 
 
 
@@ -255,6 +315,151 @@ bool utility::Merge(xImage* srcB, xImage* srcG, xImage* srcR, xImage* dstBGR) {
 }
 
 
+void utility::helpMergeMultiThreadByLayer8_1Ch_3Ch(uint8_t* srcB, uint8_t* srcG, uint8_t* srcR, uint8_t* dstBGR, const int& rowBytesSrc,
+	const int& rowBytesDst, const int& width, const int& lowHeight, const int& highHeight) {
+
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+
+		for (int x{}, index = y * rowBytesDst, indexSrc = y * rowBytesSrc; x < width; ++x, index += 3, ++indexSrc) {
+
+			dstBGR[index] = srcB ? srcB[indexSrc] : 0;
+			dstBGR[index + 1] = srcG ? srcG[indexSrc] : 0;
+			dstBGR[index + 2] = srcR ? srcR[indexSrc] : 0;
+		}
+	}
+
+}
+
+
+bool utility::MergeMultiThreadByLayer8_1Ch_3Ch(xImage* srcB, xImage* srcG, xImage* srcR, xImage* dstBGR) {
+
+	int width{};
+	int height{};
+	int RowBytesDst{};
+	int RowBytesSrc{};
+	uint8_t* srcBData{ nullptr };
+	uint8_t* srcGData{ nullptr };
+	uint8_t* srcRData{ nullptr };
+	uint8_t* dstBGRData{ nullptr };
+
+	if (!dstBGR) {
+		return false;
+	}
+
+	if (srcB && srcG && srcR)/* B G R*/ {
+		if ((srcB->GetWidth() != srcG->GetWidth() || srcB->GetHeight() != srcG->GetHeight()) || (srcG->GetWidth() != srcR->GetWidth() || srcG->GetHeight() != srcR->GetHeight()) ||
+			(srcB->GetWidth() != srcR->GetWidth() || srcB->GetHeight() != srcR->GetHeight())) {
+			return false;
+		}
+
+		width = srcB->GetWidth();
+		height = srcB->GetHeight();
+		RowBytesSrc = srcB->GetRowBytes();
+
+		srcBData = srcB->GetData();
+		srcGData = srcG->GetData();
+		srcRData = srcR->GetData();
+	}
+	else if (srcB && !srcG && !srcR)/* B */ {
+
+		width = srcB->GetWidth();
+		height = srcB->GetHeight();
+		RowBytesSrc = srcB->GetRowBytes();
+
+		srcBData = srcB->GetData();
+
+
+	}
+	else if (!srcB && srcG && !srcR) /* G */ {
+		width = srcG->GetWidth();
+		height = srcG->GetHeight();
+		RowBytesSrc = srcG->GetRowBytes();
+
+		srcGData = srcG->GetData();
+
+	}
+	else if (!srcB && !srcG && srcR) /* R */ {
+		width = srcR->GetWidth();
+		height = srcR->GetHeight();
+		RowBytesSrc = srcR->GetRowBytes();
+
+		srcRData = srcR->GetData();
+
+	}
+	else if (srcB && srcG && !srcR) /* B G */ {
+		if (srcB->GetWidth() != srcG->GetWidth() || srcB->GetHeight() != srcG->GetHeight()) {
+			return false;
+		}
+
+		width = srcB->GetWidth();
+		height = srcB->GetHeight();
+		RowBytesSrc = srcB->GetRowBytes();
+
+
+		srcBData = srcB->GetData();
+		srcGData = srcG->GetData();
+	}
+	else if (srcB && !srcG && srcR) /* B R */ {
+		if (srcB->GetWidth() != srcR->GetWidth() || srcB->GetHeight() != srcR->GetHeight()) {
+			return false;
+		}
+
+		width = srcB->GetWidth();
+		height = srcB->GetHeight();
+		RowBytesSrc = srcB->GetRowBytes();
+
+
+		srcBData = srcB->GetData();
+		srcRData = srcR->GetData();
+	}
+	else if (!srcB && srcG && srcR) /* G R */ {
+		if (srcG->GetWidth() != srcR->GetWidth() || srcG->GetHeight() != srcR->GetHeight()) {
+			return false;
+		}
+
+		width = srcG->GetWidth();
+		height = srcG->GetHeight();
+		RowBytesSrc = srcG->GetRowBytes();
+
+
+		srcGData = srcG->GetData();
+		srcRData = srcR->GetData();
+	}
+	else
+	{
+		return false;
+	}
+
+	if (dstBGR->IsValid() == false)
+		dstBGR->allocateSpace(width, height, COLOR_ORDER::_BGR);
+
+	RowBytesDst = dstBGR->GetRowBytes();
+
+	dstBGRData = dstBGR->GetData();
+
+	const int thSize = std::thread::hardware_concurrency();
+	const int n = height / thSize;
+	const int mn = height % thSize;
+
+	int low{};
+	int high{ n };
+
+	std::vector<std::jthread> threads;
+
+	for (int i{}; i < thSize; ++i)
+	{
+		if (i != 0) {
+			low += n;
+			high += (i == thSize - 1 ? n + mn : n);
+		}
+
+		threads.emplace_back(helpMergeMultiThreadByLayer8_1Ch_3Ch, srcBData, srcGData, srcRData, dstBGRData, RowBytesSrc, RowBytesDst, width, low, high);
+
+	}
+
+}
+
+
 
 bool utility::addWeighted1Ch(xImage* src1Image, xImage* src2Image, xImage* dst, float alpha, float beta, float gamma) {
 
@@ -301,11 +506,75 @@ bool utility::addWeighted1Ch(xImage* src1Image, xImage* src2Image, xImage* dst, 
 }
 
 
+void utility::helpaddWeightedMultiThreadByLayer32int_1Ch_Out32double_1Ch(const uint8_t* src1, const uint8_t* src2, uint8_t* dst,
+	const int& rowBytesSrc, const int& rowBytesDst, const int& width, const int& lowHeigh, const int& highHeight,
+	const float& alpha, const float& beta, const float& gamma)
+{
+	for (int y{ lowHeigh }; y < highHeight; ++y) {
+		auto tmpSrc1Data = (int*)(src1 + y * rowBytesSrc);
+		auto tmpSrc2Data = (int*)(src1 + y * rowBytesSrc);
+		auto tmpDstData = (double*)(dst + y * rowBytesDst);
+		for (int x{}; x < width; ++x) {
+			tmpDstData[x] = std::abs(tmpSrc1Data[x]) * alpha + std::abs(tmpSrc2Data[x]) * beta + gamma;
+		}
+	}
+}
+
+
+bool utility::addWeightedMultiThreadByLayer32int_1Ch_Out32double_1Ch(xImage* src1, xImage* src2, xImage* dst,
+	const float& alpha, const float& beta, const float& gamma) {
+
+	if (src1 && src2 && src1->IsValid() && src2->IsValid() && &dst) {
+
+		const int imageW = src1->GetWidth();
+		const int imageH = src1->GetHeight();
+		const int rowBytesSrc = src1->GetRowBytes();
+
+		if (!dst->IsValid()) {
+			dst->allocateSpace(imageW, imageH, COLOR_ORDER::_DOUBLE);
+		}
+
+		const int rowBytesDst = dst->GetRowBytes();
+
+		const uint8_t* pSrc1 = src1->GetData();
+		const uint8_t* pSrc2 = src2->GetData();
+
+		uint8_t* pDst = dst->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+		const int n = imageH / thSize;
+		const int mn = imageH % thSize;
+
+		std::vector<std::jthread> threads;
+
+		int low{};
+		int high{ n };
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? n + mn : n);
+			}
+			threads.emplace_back(helpaddWeightedMultiThreadByLayer32int_1Ch_Out32double_1Ch, pSrc1, pSrc2, pDst,
+				rowBytesSrc, rowBytesDst, imageW, low, high, alpha, beta, gamma);
+		}
+
+
+
+		return true;
+	}
+
+	return false;
+}
+
+
+
+
 
 
 void utility::magnitude32F1Ch(xImage* src1, xImage* src2, xImage* dst) {
 
-	if (src1 && src2 && dst && src1->IsValid() && src2->IsValid()) {
+	if (src1 && src2 && dst && src1->IsValid() && src2->IsValid() && dst) {
 
 		if (src1->GetWidth() == src2->GetWidth() && src1->GetHeight() == src2->GetHeight() &&
 			src1->GetOrder() == COLOR_ORDER::_FLOAT && src2->GetOrder() == COLOR_ORDER::_FLOAT) {
@@ -345,6 +614,67 @@ void utility::magnitude32F1Ch(xImage* src1, xImage* src2, xImage* dst) {
 	}
 
 }
+
+void utility::helpMagnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch(const uint8_t* pSrc1, const uint8_t* pSrc2, uint8_t* pDst, const int& rowBytesSrc,
+	const int& rowBytesDst, const int& width, const int& lowHeight, const int& highHeight) {
+
+	for (int y{ lowHeight }; y < highHeight; ++y) {
+		auto* dstD = (float*)(pDst + (y * rowBytesDst));
+
+		auto* src1D = (float*)(pSrc1 + (y * rowBytesSrc));
+		auto* src2D = (float*)(pSrc2 + (y * rowBytesSrc));
+
+		for (int x{}; x < width; ++x) {
+			dstD[x] = std::sqrt(src1D[x] * src1D[x] + src2D[x] * src2D[x]);
+			//dstD[x] = std::abs(src1D[x]) + std::abs(src2D[x]);
+		}
+	}
+
+}
+
+bool utility::magnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch(xImage* src1, xImage* src2, xImage* dst) {
+
+	if (src1 && src2 && src1->IsValid() && src2->IsValid() && dst) {
+
+		const int imageW = src1->GetWidth();
+		const int imageH = src1->GetHeight();
+		const int rowBytesSrc = src1->GetRowBytes();
+
+		if (!dst->IsValid()) {
+			dst->allocateSpace(imageW, imageH, COLOR_ORDER::_FLOAT);
+		}
+
+		const int rowBytesDst = dst->GetRowBytes();
+
+		const uint8_t* pSrc1 = src1->GetData();
+		const uint8_t* pSrc2 = src2->GetData();
+		uint8_t* pDst = dst->GetData();
+
+		const int thSize = std::thread::hardware_concurrency();
+		const int n = imageH / thSize;
+		const int mn = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? n + mn : n);
+			}
+
+			threads.emplace_back(helpMagnitudeMultiThreadByLayer32float_1Ch_Out32float_1Ch, pSrc1, pSrc2, pDst, rowBytesSrc, rowBytesDst, imageW,
+				low, high);
+		}
+
+
+		return true;
+	}
+	return false;
+}
+
 
 
 
@@ -432,12 +762,12 @@ bool utility::angleFormedGradients32F1Ch(xImage* gradX, xImage* gradY, xImage* a
 
 			auto angleRowBytes = angle->GetRowBytes();
 
-			const auto scale =  180.0f / (float)std::numbers::pi;
+			const auto scale = 180.0f / (float)std::numbers::pi;
 
 			for (int y{}; y < height; ++y) {
 
 				auto* tmpgradXData = (float*)(gradXData + (y * srcRowBytes));
-				auto* tmpgradYData = (float *)(gradYData + (y * srcRowBytes));
+				auto* tmpgradYData = (float*)(gradYData + (y * srcRowBytes));
 				auto* tmpAngleData = (float*)(angleData + (y * angleRowBytes));
 
 				for (int x{}; x < width; ++x) {
@@ -458,6 +788,8 @@ bool utility::angleFormedGradients32F1Ch(xImage* gradX, xImage* gradY, xImage* a
 
 	return false;
 }
+
+
 
 
 bool utility::ConvertTo32F28U1Ch(xImage* src, xImage* dst) {
@@ -495,6 +827,77 @@ bool utility::ConvertTo32F28U1Ch(xImage* src, xImage* dst) {
 
 	return false;
 }
+
+
+void utility::helpConvertToMultiThreadByLayer32F28U1Ch(const uint8_t* pSrc, uint8_t* pDst, const int rowBytesSrc, const int rowBytesDst,
+	const int width, const int low, const int high)
+{
+	for (auto y{ low }; y < high; y++)
+	{
+		float* srcRow = (float*)(pSrc + y * rowBytesSrc);
+		uint8_t* dstRow = (pDst + y * rowBytesDst);
+
+		for (auto x = 0; x < width; x++)
+		{
+			dstRow[x] = utility::saturate_cast(srcRow[x]);
+
+		}
+
+	}
+}
+
+bool utility::ConvertToMultiThreadByLayer32F28U1Ch(xImage* src, xImage* dst) {
+
+	if (src && dst && src->IsValid()) {
+
+		const int imageW = src->GetWidth();
+		const int imageH = src->GetHeight();
+		const int rowBytesSrc = src->GetRowBytes();
+
+		if (dst->IsValid()) {
+			dst->deAllocateSpace();
+		}
+
+		dst->allocateSpace(imageW, imageH, COLOR_ORDER::_BYTE);
+
+		const int rowBytesDst = dst->GetRowBytes();
+
+		const uint8_t* pSrc = src->GetData();
+		uint8_t* pDst = dst->GetData();
+
+
+		const int thSize = std::thread::hardware_concurrency();
+
+		const int n = imageH / thSize;
+		const int mn = imageH % thSize;
+
+		int low{};
+		int high{ n };
+
+		std::vector<std::jthread> threads;
+
+		for (int i{}; i < thSize; ++i) {
+
+			if (i != 0) {
+				low += n;
+				high += (i == thSize - 1 ? n + mn : n);
+			}
+
+
+			threads.emplace_back(helpConvertToMultiThreadByLayer32F28U1Ch, pSrc, pDst, rowBytesSrc, rowBytesDst, imageW, low, high);
+		}
+		return true;
+	}
+	return false;
+}
+
+
+
+
+
+
+
+
 bool utility::ConvertTo64F28U1Ch(xImage* src, xImage* dst) {
 
 	if (src && src->IsValid() && src->GetOrder() == COLOR_ORDER::_DOUBLE && dst) {
@@ -702,7 +1105,7 @@ void utility::nonMaximumSupression32F1Ch(xImage* magnitude, xImage* angle, xImag
 
 			int outRowBytes = nonMaxSupp->GetRowBytes();
 
-			float neighbor1{255}, neighbor2{255};
+			float neighbor1{ 255 }, neighbor2{ 255 };
 			float* tmp1Magnitude{ nullptr }, * tmp2Magnitude{ nullptr };
 			for (int y{ 1 }; y < height - 1; ++y) {
 
@@ -729,7 +1132,7 @@ void utility::nonMaximumSupression32F1Ch(xImage* magnitude, xImage* angle, xImag
 						neighbor1 = tmp1Magnitude[x];
 						neighbor2 = tmp2Magnitude[x];
 					}
-					else if(angle[x] >= 112.5 && angle[x] < 157.5) {
+					else if (angle[x] >= 112.5 && angle[x] < 157.5) {
 
 						neighbor1 = tmp1Magnitude[x - 1];
 						neighbor2 = tmp2Magnitude[x + 1];
@@ -915,7 +1318,7 @@ bool utility::range0255(xImage* src, xImage* dst) {
 		int dstRowBytes = dst->GetRowBytes();
 
 		auto srcData1 = (float*)src->GetData();
-		
+
 		float max{};
 
 		for (int i{}; i < height * width; ++i) {
@@ -972,7 +1375,7 @@ void utility::console() {
 	static HANDLE cons;
 	CString dump;
 
-	dump.Format(L"\n\n Hello \n\n");
+	//dump.Format(L"\n\n Hello \n\n");
 
 	if (AllocConsole()) {
 		cons = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -980,3 +1383,22 @@ void utility::console() {
 
 	WriteConsole(cons, (LPCTSTR)dump, dump.GetLength(), 0, 0);
 }
+
+
+bool utility::dataEqual(xImage* pInImage, xImage* pOutImage) {
+
+
+
+
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
