@@ -2,6 +2,8 @@ The image is always displayed in its processed (modified) version.
 
 By right-clicking the mouse, the original version of the image can be viewed temporarily.
 
+Drawing images in GDI engine
+
 The image can be zoomed in for detailed viewing.
 
 After zooming in, the image can be moved to view different areas.
